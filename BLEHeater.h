@@ -29,7 +29,6 @@ private:
     float temperature = 0.0;
 
     void sendCommand(const Command &cmd);
-    void enableNotifications();
     uint8_t calcChecksum(const uint8_t *data, size_t len);
     static void notifyCallback(BLERemoteCharacteristic* pChar, uint8_t* pData, size_t length, bool isNotify);
     void handleNotification(uint8_t* data, size_t length);

@@ -78,15 +78,6 @@ uint8_t BLEHeater::calcChecksum(const uint8_t *data, size_t len) {
     return (uint8_t)(sum % 256);
 }
 
-void BLEHeater::enableNotifications() {
-    if (writeChar && writeChar->canNotify()) {
-        writeChar->registerForNotify(BLEHeater::notifyCallback);
-        Serial.println("Notifications enabled");
-    } else {
-        Serial.println("Characteristic cannot notify");
-    }
-}
-
 void BLEHeater::sendCommand(const Command &cmd) {
     if (!isConnected() || !writeChar) return;
     uint8_t message[8] = {0xAA, 0x55, 0x0C, 0x22, 0x01, 0x00, 0x00, 0x00};
@@ -98,17 +89,14 @@ void BLEHeater::sendCommand(const Command &cmd) {
 
 void BLEHeater::handleNotification(uint8_t* data, size_t length) {
     // Example parsing
-    bool newPower = data[3];
+    bool newPower = data[3] > 0 ? 1 : 0;
     float newTemp = ((data[16] << 8) | data[15]);
 
     // Only notify HomeKit if state changed
     if (newPower != powerState || newTemp != temperature) {
         powerState = newPower;
         temperature = newTemp;
-
-        if (onStateChanged) {
-            onStateChanged(powerState, temperature);
-        }
+        onStateChanged(powerState, temperature);
     }
 }
 
