@@ -29,12 +29,12 @@ struct HeaterService : Service::HeaterCooler {
         
 
         // BLE → HomeKit: heater sends update or poll detects change
-        heater.onStateChanged = [this](bool power, float temp) {
+        heater.onStateChanged = [this](bool power, float temp, bool heating) {
             if (active->getVal<bool>() != power)
                 active->setVal(power ? 1 : 0);
             if (fabs(currentTemp->getVal<float>() - temp) > 0.1)
                 currentTemp->setVal(temp);
-            currentState->setVal(power ? 2 : 1);  // 2=Heating, 1=Idle
+            currentState->setVal(heating ? 2 : 1);  // 2=Heating, 1=Idle
         };
 
         // Start background poll task for heater
@@ -51,6 +51,7 @@ struct HeaterService : Service::HeaterCooler {
 
     boolean update() override {
         heater.setPower(active->getNewVal<bool>());
+        // currentState->setVal(active->getNewVal<bool>() ? 2 : 1);
         return true;
     }
 

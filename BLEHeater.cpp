@@ -88,15 +88,16 @@ void BLEHeater::sendCommand(const Command &cmd) {
 }
 
 void BLEHeater::handleNotification(uint8_t* data, size_t length) {
-    // Example parsing
     bool newPower = data[3] > 0 ? 1 : 0;
     float newTemp = ((data[16] << 8) | data[15]);
+    int newHeating = data[5] == 3 ? 1 : 0;
 
     // Only notify HomeKit if state changed
-    if (newPower != powerState || newTemp != temperature) {
+    if (newPower != powerState || newTemp != temperature || newHeating != heating) {
         powerState = newPower;
         temperature = newTemp;
-        onStateChanged(powerState, temperature);
+        heating = newHeating;
+        onStateChanged(powerState, temperature, heating);
     }
 }
 

@@ -17,7 +17,7 @@ public:
     // setters
     void setPower(bool on);
 
-    std::function<void(bool power, float temp)> onStateChanged;
+    std::function<void(bool power, float temp, int heating)> onStateChanged;
 
 private:
     const char* mac;
@@ -27,6 +27,7 @@ private:
 
     bool powerState = false;
     float temperature = 0.0;
+    int heating = 0;
 
     void sendCommand(const Command &cmd);
     uint8_t calcChecksum(const uint8_t *data, size_t len);
