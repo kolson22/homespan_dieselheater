@@ -1,8 +1,11 @@
 #include "HomeSpan.h"
 #include "BLEHeater.h"
 #include "HeaterService.h"
+#include "BLEHeaterCommands.h"
 
-BLEHeater heater("48:84:0E:1B:48:B4");
+BLEHeater heater("48:84:0E:1B:23:0E");
+
+const unsigned long rebootInterval = 6UL * 60UL * 60UL * 1000UL;  // 6 hours
 
 void setup() {
     Serial.begin(115200);
@@ -20,5 +23,6 @@ void setup() {
 }
 
 void loop() {
-    homeSpan.poll();
+  if (millis() >= rebootInterval) ESP.restart();
+  homeSpan.poll();
 }
