@@ -22,6 +22,7 @@ struct HeaterService : Service::HeaterCooler {
 
         active->setVal(0);
         currentTemp->setVal(0.0);
+        currentTemp->setRange(-60, 120, 0.1);
         currentState->setVal(1);
         targetState->setValidValues(2, 0, 1);
         targetState->setVal(1);

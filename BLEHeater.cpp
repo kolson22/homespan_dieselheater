@@ -89,7 +89,9 @@ void BLEHeater::sendCommand(const Command &cmd) {
 
 void BLEHeater::handleNotification(uint8_t* data, size_t length) {
     bool newPower = data[3] > 0 ? 1 : 0;
-    float newTemp = ((data[16] << 8) | data[15]);
+    int16_t rawTemp = (int16_t)((uint16_t)data[16] << 8 | data[15]);
+    // float newTemp = rawTemp;
+    float newTemp = rawTemp / 10.0f;// temp is in 0.1°C units
     int newHeating = data[5] == 3 ? 1 : 0;
 
     // Only notify HomeKit if state changed

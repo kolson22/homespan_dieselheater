@@ -3,7 +3,7 @@
 #include "HeaterService.h"
 #include "BLEHeaterCommands.h"
 
-BLEHeater heater("48:84:0E:1B:23:0E");
+BLEHeater heater("48:84:0E:1B:48:B4");
 
 const unsigned long rebootInterval = 6UL * 60UL * 60UL * 1000UL;  // 6 hours
 
