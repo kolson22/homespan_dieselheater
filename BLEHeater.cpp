@@ -1,3 +1,4 @@
+#pragma once
 #include "BLEHeater.h"
 #include <Arduino.h>
 
@@ -54,9 +55,11 @@ bool BLEHeater::isConnected() {
 
 void BLEHeater::poll() {
     if (!isConnected()) {
+        Serial.println("heater wasn't connected, trying to connect");
         connect(); // try reconnect
         return;
     }
+    Serial.println("Polled heater for status...");
     sendCommand(CMD_STATUS);
 }
 
@@ -90,9 +93,13 @@ void BLEHeater::sendCommand(const Command &cmd) {
 void BLEHeater::handleNotification(uint8_t* data, size_t length) {
     bool newPower = data[3] > 0 ? 1 : 0;
     int16_t rawTemp = (int16_t)((uint16_t)data[16] << 8 | data[15]);
-    // float newTemp = rawTemp;
-    float newTemp = rawTemp / 10.0f;// temp is in 0.1°C units
+    float newTemp = (rawTemp - 32.0) * 5.0 / 9.0;// temp is in 0.1°C units
     int newHeating = data[5] == 3 ? 1 : 0;
+    Serial.println(newTemp);
+    // for (int i = 0; i < (int)length; i++) {
+    //     Serial.printf("[%02d]=%02X ", i, data[i]);
+    //     if ((i + 1) % 8 == 0) Serial.println();
+    // }
 
     // Only notify HomeKit if state changed
     if (newPower != powerState || newTemp != temperature || newHeating != heating) {
