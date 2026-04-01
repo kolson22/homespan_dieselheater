@@ -1,5 +1,6 @@
 #pragma once
 #include <BLEDevice.h>
+#include <freertos/semphr.h>
 #include "BLEHeaterCommands.h"
 
 class BLEHeater {
@@ -25,6 +26,7 @@ private:
     BLERemoteCharacteristic *writeChar = nullptr;
     bool heaterConnected = false;
 
+    SemaphoreHandle_t stateMutex = nullptr;
     bool powerState = false;
     float temperature = 0.0;
     bool heating = false;

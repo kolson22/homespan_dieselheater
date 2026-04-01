@@ -7,6 +7,6 @@ struct Command {
 };
 
 // Example commands
-const Command CMD_STATUS     = {0x01, 0x00};
-const Command CMD_POWER_ON   = {0x03, 0x01};
-const Command CMD_POWER_OFF  = {0x03, 0x00};
+inline const Command CMD_STATUS     = {0x01, 0x00};
+inline const Command CMD_POWER_ON   = {0x03, 0x01};
+inline const Command CMD_POWER_OFF  = {0x03, 0x00};

@@ -10,9 +10,10 @@ const unsigned long rebootInterval = 6UL * 60UL * 60UL * 1000UL;  // 6 hours
 void setup() {
     Serial.begin(115200);
     homeSpan.begin(Category::Heaters, "Diesel Heater");
-    
+    homeSpan.enableOTA(false);
+    // homeSpan.setLogLevel(2);
     heater.begin();
-    heater.connect();
+    if (!heater.connect()) Serial.println("Initial heater connect failed, will retry in poll loop");
 
     new SpanAccessory();
         new Service::AccessoryInformation();

@@ -1,4 +1,3 @@
-#pragma once
 #include "BLEHeater.h"
 #include <Arduino.h>
 
@@ -13,11 +12,18 @@ BLEHeater::BLEHeater(const char *macAddress) {
 }
 
 void BLEHeater::begin() {
+    stateMutex = xSemaphoreCreateMutex();
     BLEDevice::init("");
 }
 
 bool BLEHeater::connect() {
     if (heaterConnected && client && client->isConnected()) return true;
+
+    if (client) {
+        client->disconnect();
+        delete client;
+        client = nullptr;
+    }
 
     client = BLEDevice::createClient();
     BLEAddress addr(mac);
@@ -59,17 +65,27 @@ void BLEHeater::poll() {
         connect(); // try reconnect
         return;
     }
-    Serial.println("Polled heater for status...");
+    // Serial.println("Polled heater for status...");
     sendCommand(CMD_STATUS);
 }
 
-bool BLEHeater::getPower() { return powerState; }
-float BLEHeater::getTemperature() { return temperature; }
+bool BLEHeater::getPower() {
+    xSemaphoreTake(stateMutex, portMAX_DELAY);
+    bool val = powerState;
+    xSemaphoreGive(stateMutex);
+    return val;
+}
+
+float BLEHeater::getTemperature() {
+    xSemaphoreTake(stateMutex, portMAX_DELAY);
+    float val = temperature;
+    xSemaphoreGive(stateMutex);
+    return val;
+}
 
 void BLEHeater::setPower(bool on) {
     if (!isConnected() || !writeChar) return;
     const Command &cmd = on ? CMD_POWER_ON : CMD_POWER_OFF;
-    powerState = on;
     sendCommand(cmd);
 }
 
@@ -91,22 +107,25 @@ void BLEHeater::sendCommand(const Command &cmd) {
 }
 
 void BLEHeater::handleNotification(uint8_t* data, size_t length) {
-    bool newPower = data[3] > 0 ? 1 : 0;
-    int16_t rawTemp = (int16_t)((uint16_t)data[16] << 8 | data[15]);
-    float newTemp = (rawTemp - 32.0) * 5.0 / 9.0;// temp is in 0.1°C units
-    int newHeating = data[5] == 3 ? 1 : 0;
-    Serial.println(newTemp);
-    // for (int i = 0; i < (int)length; i++) {
-    //     Serial.printf("[%02d]=%02X ", i, data[i]);
-    //     if ((i + 1) % 8 == 0) Serial.println();
-    // }
+    if (length < 17) return;
 
-    // Only notify HomeKit if state changed
+    bool newPower = data[3] > 0;
+    int16_t rawTemp = (int16_t)((uint16_t)data[16] << 8 | data[15]);
+    float newTemp = (rawTemp - 32.0f) * 5.0f / 9.0f;  // raw value is in °F; convert to °C
+    bool newHeating = data[5] == 3;
+
+    bool changed = false;
+    xSemaphoreTake(stateMutex, portMAX_DELAY);
     if (newPower != powerState || newTemp != temperature || newHeating != heating) {
         powerState = newPower;
         temperature = newTemp;
         heating = newHeating;
-        onStateChanged(powerState, temperature, heating);
+        changed = true;
+    }
+    xSemaphoreGive(stateMutex);
+
+    if (changed && onStateChanged) {
+        onStateChanged(newPower, newTemp, newHeating);
     }
 }
 

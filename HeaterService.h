@@ -10,6 +10,7 @@ struct HeaterService : Service::HeaterCooler {
     SpanCharacteristic *displayUnits;
     SpanCharacteristic *targetTemp;
     BLEHeater &heater;
+    TaskHandle_t pollTaskHandle = nullptr;
 
     HeaterService(BLEHeater &h) : heater(h) {
         active = new Characteristic::Active(0);
@@ -45,7 +46,7 @@ struct HeaterService : Service::HeaterCooler {
             4096,                  // stack size
             this,                  // parameter = this service
             1,                     // priority
-            nullptr,               // task handle
+            &pollTaskHandle,       // task handle
             1                      // core
         );
     }
